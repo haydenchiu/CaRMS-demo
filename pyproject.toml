@@ -1,11 +1,80 @@
 [project]
 name = "carms-demo"
 version = "0.1.0"
-description = "Add your description here"
+description = "CaRMS Residency Program Data Platform - Production-ready data engineering demo"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "altair>=6.0.0",
-    "numpy>=2.4.2",
-    "pandas>=3.0.0",
+    # Core data engineering
+    "sqlalchemy>=2.0.0",
+    "sqlmodel>=0.0.14",
+    "psycopg2-binary>=2.9.9",
+    "pandas>=2.0.0",
+    "openpyxl>=3.1.2",
+    
+    # Dagster orchestration
+    "dagster>=1.6.0",
+    "dagster-webserver>=1.6.0",
+    "dagster-postgres>=0.22.0",
+    
+    # FastAPI
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0",
+    "pydantic>=2.0.0",
+    
+    # LangChain & embeddings
+    "langchain>=0.1.0",
+    "langchain-openai>=0.0.5",
+    "openai>=1.12.0",
+    "tiktoken>=0.6.0",
+    "pgvector>=0.2.5",
+    
+    # Utilities
+    "python-dotenv>=1.0.0",
+    "loguru>=0.7.2",
+    "pydantic-settings>=2.0.0",
 ]
+
+[project.optional-dependencies]
+dev = [
+    # Testing
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "httpx>=0.27.0",
+    
+    # Code quality
+    "black>=24.0.0",
+    "ruff>=0.2.0",
+    "mypy>=1.8.0",
+    "pre-commit>=3.6.0",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

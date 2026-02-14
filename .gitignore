@@ -8,5 +8,50 @@ wheels/
 
 # Virtual environments
 .venv
+venv/
+env/
 
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Dagster
+dagster_home/
+
+# Data files (keep structure, ignore content)
 data/*
+!data/README.md
+
+# Docker volumes
+.docker/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

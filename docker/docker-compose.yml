@@ -1,0 +1,73 @@
+version: "3.8"
+
+services:
+  # PostgreSQL database with pgvector extension
+  postgres:
+    image: ankane/pgvector:latest
+    container_name: carms-postgres
+    environment:
+      POSTGRES_USER: carms
+      POSTGRES_PASSWORD: carms
+      POSTGRES_DB: carms
+    ports:
+      - "5434:5432"  # Map to 5434 on host to avoid conflict
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U carms"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - carms-network
+
+  # Dagster daemon and web UI
+  dagster:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dagster
+    container_name: carms-dagster
+    environment:
+      DATABASE_URL: postgresql://carms:carms@postgres:5432/carms  # Internal docker network uses 5432
+      DAGSTER_HOME: /opt/dagster/dagster_home
+      PYTHONUNBUFFERED: "1"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../src:/app/src
+      - ../data:/app/data
+      - dagster_home:/opt/dagster/dagster_home
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - carms-network
+
+  # FastAPI application
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    container_name: carms-api
+    environment:
+      DATABASE_URL: postgresql://carms:carms@postgres:5432/carms  # Internal docker network uses 5432
+      PYTHONUNBUFFERED: "1"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../src:/app/src
+      - ../data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - carms-network
+
+volumes:
+  postgres_data:
+  dagster_home:
+
+networks:
+  carms-network:
+    driver: bridge
