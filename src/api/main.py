@@ -1,33 +1,21 @@
 """FastAPI application for CaRMS data platform."""
 
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from src.utils.config import settings
 
-# Initialize FastAPI app
-app = FastAPI(
-    title="CaRMS Residency Program Data Platform",
-    description="Production-ready data platform for Canadian residency program information",
-    version="0.1.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
-)
 
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.on_event("startup")
-async def startup_event() -> None:
-    """Initialize application on startup."""
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator:
+    """Application lifespan manager.
+    
+    Handles startup and shutdown events.
+    """
+    # Startup
     logger.info("Starting CaRMS Data Platform API")
     logger.info(f"Environment: {settings.environment}")
     logger.info(f"Debug mode: {settings.debug}")
@@ -38,12 +26,31 @@ async def startup_event() -> None:
         logger.info("Database connection verified")
     else:
         logger.warning("Database connection failed - some endpoints may not work")
-
-
-@app.on_event("shutdown")
-async def shutdown_event() -> None:
-    """Cleanup on application shutdown."""
+    
+    yield
+    
+    # Shutdown
     logger.info("Shutting down CaRMS Data Platform API")
+
+
+# Initialize FastAPI app
+app = FastAPI(
+    title="CaRMS Residency Program Data Platform",
+    description="Production-ready data platform for Canadian residency program information",
+    version="0.1.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    lifespan=lifespan,
+)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure appropriately for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
@@ -73,13 +80,11 @@ async def health_check() -> dict:
     }
 
 
-# Import and include routers (will be implemented in Phase 2)
-# from .routes import programs, search, analytics, simulation, reports
-# app.include_router(programs.router, prefix="/api/v1/programs", tags=["programs"])
-# app.include_router(search.router, prefix="/api/v1/search", tags=["search"])
-# app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
-# app.include_router(simulation.router, prefix="/api/v1/simulation", tags=["simulation"])
-# app.include_router(reports.router, prefix="/api/v1/reports", tags=["reports"])
+# Import and include routers
+from src.api.routes import programs, analytics
+
+app.include_router(programs.router, prefix="/api/v1/programs", tags=["programs"])
+app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
 
 
 if __name__ == "__main__":

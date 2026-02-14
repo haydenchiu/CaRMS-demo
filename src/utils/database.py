@@ -25,6 +25,14 @@ def init_db() -> None:
     logger.info("Database initialized successfully")
 
 
+def get_engine():
+    """Get the database engine.
+    
+    Returns the global engine instance for direct access.
+    """
+    return engine
+
+
 def drop_db() -> None:
     """Drop all database tables. Use with caution!"""
     logger.warning("Dropping all database tables...")
